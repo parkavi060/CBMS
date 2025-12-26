@@ -4,6 +4,7 @@ const Department = require('../models/Department');
 const BudgetHead = require('../models/BudgetHead');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
+const BudgetProposal = require('../models/BudgetProposal');
 
 // @desc    Get expenditure report
 // @route   GET /api/reports/expenditures
@@ -463,6 +464,72 @@ const getAuditReport = async (req, res) => {
   }
 };
 
+// @desc    Get budget proposal report
+// @route   GET /api/reports/proposals
+// @access  Private
+const getBudgetProposalReport = async (req, res) => {
+  try {
+    const { financialYear, department, status } = req.query;
+
+    const query = {};
+    if (financialYear) query.financialYear = financialYear;
+    if (department) query.department = department;
+    if (status) query.status = status;
+
+    const proposals = await BudgetProposal.find(query)
+      .populate('department', 'name code')
+      .populate('proposalItems.budgetHead', 'name code category budgetType')
+      .populate('submittedBy', 'name email')
+      .populate('approvedBy', 'name email')
+      .sort({ financialYear: -1, department: 1 });
+
+    const summary = {
+      totalProposals: proposals.length,
+      totalProposedAmount: proposals.reduce((sum, p) => sum + p.totalProposedAmount, 0),
+      byStatus: {
+        draft: 0,
+        submitted: 0,
+        verified: 0,
+        approved: 0,
+        rejected: 0,
+        revised: 0
+      },
+      byDepartment: {}
+    };
+
+    proposals.forEach(p => {
+      summary.byStatus[p.status] = (summary.byStatus[p.status] || 0) + 1;
+
+      const deptName = p.department.name;
+      if (!summary.byDepartment[deptName]) {
+        summary.byDepartment[deptName] = {
+          count: 0,
+          amount: 0,
+          status: p.status
+        };
+      }
+      summary.byDepartment[deptName].count++;
+      summary.byDepartment[deptName].amount += p.totalProposedAmount;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        proposals,
+        summary,
+        filters: { financialYear, department, status }
+      }
+    });
+  } catch (error) {
+    console.error('Get budget proposal report error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while generating budget proposal report',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // Helper functions
 const getCurrentFinancialYear = () => {
   const now = new Date();
@@ -702,5 +769,6 @@ module.exports = {
   getExpenditureReport,
   getAllocationReport,
   getDashboardReport,
-  getAuditReport
+  getAuditReport,
+  getBudgetProposalReport
 };

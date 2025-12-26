@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const Department = require('../models/Department');
-const AuditLog = require('../models/AuditLog');
+const { recordAuditLog } = require('../utils/auditService');
 const crypto = require('crypto');
 const { generateToken } = require('../middleware/auth');
 
@@ -99,19 +99,16 @@ const loginUser = async (req, res) => {
 
     // Log login event (simplified for now)
     try {
-      await AuditLog.create({
+      await recordAuditLog({
         eventType: 'user_login',
+        req,
         actor: user._id,
         actorRole: user.role,
         targetEntity: 'User',
         targetId: user._id,
         details: {
-          loginTime: new Date(),
-          ipAddress: req.ip || req.connection.remoteAddress,
-          userAgent: req.get('User-Agent')
-        },
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent')
+          loginTime: new Date()
+        }
       });
     } catch (auditError) {
       console.error('Audit log error (non-critical):', auditError);
@@ -266,17 +263,14 @@ const changePassword = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     // Log logout event
-    await AuditLog.create({
+    await recordAuditLog({
       eventType: 'user_logout',
-      actor: req.user._id,
-      actorRole: req.user.role,
+      req,
       targetEntity: 'User',
       targetId: req.user._id,
       details: {
         logoutTime: new Date()
-      },
-      ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.get('User-Agent')
+      }
     });
 
     res.json({
@@ -412,18 +406,16 @@ const resetPassword = async (req, res) => {
 
     // Log password reset event
     try {
-      await AuditLog.create({
+      await recordAuditLog({
         eventType: 'password_reset',
+        req,
         actor: user._id,
         actorRole: user.role,
         targetEntity: 'User',
         targetId: user._id,
         details: {
-          resetTime: new Date(),
-          ipAddress: req.ip || req.connection.remoteAddress
-        },
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent')
+          resetTime: new Date()
+        }
       });
     } catch (auditError) {
       console.error('Audit log error (non-critical):', auditError);

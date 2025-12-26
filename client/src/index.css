@@ -289,14 +289,20 @@ a:hover {
   background: var(--primary-light);
 }
 
-.btn-danger {
-  background: var(--error);
-  color: white;
-}
-
 .btn-danger:hover:not(:disabled) {
   background: #dc2626;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: var(--success);
+  filter: brightness(0.9);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 /* Button Sizes */

@@ -31,7 +31,14 @@ const auditLogSchema = new mongoose.Schema({
       'settings_updated',
       'file_upload_blocked',
       'file_upload_scanned',
-      'approval_reminder'
+      'approval_reminder',
+      'budget_proposal_created',
+      'budget_proposal_updated',
+      'budget_proposal_submitted',
+      'budget_proposal_approved',
+      'budget_proposal_rejected',
+      'budget_proposal_deleted',
+      'password_reset'
     ]
   },
   actor: {
@@ -45,7 +52,7 @@ const auditLogSchema = new mongoose.Schema({
   },
   targetEntity: {
     type: String,
-    enum: ['User', 'Department', 'BudgetHead', 'Allocation', 'Expenditure', 'File', 'Report', 'System']
+    enum: ['User', 'Department', 'BudgetHead', 'Allocation', 'Expenditure', 'File', 'Report', 'System', 'BudgetProposal']
   },
   targetId: {
     type: mongoose.Schema.Types.ObjectId
