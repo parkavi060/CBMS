@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { allocationAPI, departmentsAPI, budgetHeadsAPI } from '../services/api';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { allocationAPI, departmentsAPI, budgetHeadsAPI, reportAPI } from '../services/api';
 import PageHeader from '../components/Common/PageHeader';
-import { ArrowLeft, Save, X, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Save, X, IndianRupee, Search } from 'lucide-react';
 import './AllocationForm.css';
 
 const AllocationForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const location = useLocation();
     const isEditMode = !!id;
+
+    const queryParams = new URLSearchParams(location.search);
+    const preselectProposalId = queryParams.get('proposalId');
+    const preselectDeptId = queryParams.get('deptId');
+    const preselectFY = queryParams.get('fy');
 
     const [departments, setDepartments] = useState([]);
     const [budgetHeads, setBudgetHeads] = useState([]);
@@ -23,18 +29,81 @@ const AllocationForm = () => {
         remarks: ''
     });
 
+    const [proposals, setProposals] = useState([]);
+    const [fetchingProposals, setFetchingProposals] = useState(false);
+    const [showProposalPicker, setShowProposalPicker] = useState(false);
+
+    const fetchApprovedProposals = async () => {
+        if (!formData.department || !formData.financialYear) {
+            setError('Please select department and financial year first');
+            return;
+        }
+
+        try {
+            setFetchingProposals(true);
+            const response = await reportAPI.getBudgetProposalReport({
+                department: formData.department,
+                financialYear: formData.financialYear,
+                status: 'approved'
+            });
+
+            const approvedProposals = response.data.data.proposals;
+            // Flatten proposal items
+            const items = approvedProposals.flatMap(p =>
+                p.proposalItems.map(item => ({
+                    ...item,
+                    proposalId: p._id,
+                    deptName: p.department.name
+                }))
+            );
+
+            setProposals(items);
+            setShowProposalPicker(true);
+            if (items.length === 0) {
+                setError('No approved proposals found for the selected criteria');
+            }
+        } catch (err) {
+            console.error('Error fetching approved proposals:', err);
+            setError('Failed to fetch approved proposals');
+        } finally {
+            setFetchingProposals(false);
+        }
+    };
+
+    const handleSelectProposal = (item) => {
+        setFormData(prev => ({
+            ...prev,
+            budgetHead: item.budgetHead._id || item.budgetHead,
+            allocatedAmount: item.proposedAmount.toString(),
+            remarks: `Based on approved budget proposal item. Justification: ${item.justification}`
+        }));
+        setShowProposalPicker(false);
+    };
+
     useEffect(() => {
         fetchInitialData();
         if (isEditMode) {
             fetchAllocation();
+        } else if (preselectDeptId && preselectFY) {
+            setFormData(prev => ({
+                ...prev,
+                department: preselectDeptId,
+                financialYear: preselectFY
+            }));
         }
-    }, [id]);
+    }, [id, isEditMode, preselectDeptId, preselectFY]);
+
+    useEffect(() => {
+        if (!isEditMode && preselectProposalId && formData.department === preselectDeptId && formData.financialYear === preselectFY) {
+            fetchApprovedProposals();
+        }
+    }, [formData.department, formData.financialYear, isEditMode, preselectProposalId, preselectDeptId, preselectFY]);
 
     const fetchInitialData = async () => {
         try {
             const deptResponse = await departmentsAPI.getDepartments();
             setDepartments(deptResponse.data.data.departments);
-            
+
             // Fetch all budget heads initially (will be filtered by department selection)
             const headResponse = await budgetHeadsAPI.getBudgetHeads();
             setBudgetHeads(headResponse.data.data.budgetHeads);
@@ -147,7 +216,7 @@ const AllocationForm = () => {
                     <div className="form-sections-grid">
                         <div className="form-section">
                             <h3 className="section-title">Allocation Details</h3>
-                            
+
                             <div className="form-group">
                                 <label htmlFor="department">Department *</label>
                                 <select
@@ -187,9 +256,21 @@ const AllocationForm = () => {
 
                         <div className="form-section">
                             <h3 className="section-title">Financial Information</h3>
-                            
+
                             <div className="form-group">
-                                <label htmlFor="allocatedAmount">Allocated Amount *</label>
+                                <div className="label-with-action">
+                                    <label htmlFor="allocatedAmount">Allocated Amount *</label>
+                                    {!isEditMode && (
+                                        <button
+                                            type="button"
+                                            className="btn-link"
+                                            onClick={fetchApprovedProposals}
+                                            disabled={fetchingProposals || !formData.department || !formData.financialYear}
+                                        >
+                                            <Search size={14} /> {fetchingProposals ? 'Fetching...' : 'Fetch from Proposal'}
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="amount-input-wrapper">
                                     <input
                                         type="number"
@@ -252,6 +333,43 @@ const AllocationForm = () => {
                     </div>
                 </form>
             </div>
+
+            {showProposalPicker && (
+                <div className="proposal-picker-modal">
+                    <div className="proposal-picker-content">
+                        <div className="proposal-picker-header">
+                            <h3>Select Approved Proposal Item</h3>
+                            <button className="close-btn" onClick={() => setShowProposalPicker(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="proposal-picker-body">
+                            {proposals.length > 0 ? (
+                                <div className="proposal-items-list">
+                                    {proposals.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="proposal-item-card"
+                                            onClick={() => handleSelectProposal(item)}
+                                        >
+                                            <div className="item-header">
+                                                <span className="item-head">{item.budgetHead.name}</span>
+                                                <span className="item-amount">₹{item.proposedAmount.toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className="item-details">
+                                                <p><strong>Justification:</strong> {item.justification}</p>
+                                                <p className="item-meta">Approved Proposal</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="no-items">No approved proposal items found.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -37,6 +36,11 @@ import ResubmitExpenditure from './pages/ResubmitExpenditure';
 import BulkUpload from './pages/BulkUpload';
 import DepartmentUsers from './pages/DepartmentUsers';
 import Profile from './pages/Profile';
+import BudgetProposals from './pages/BudgetProposals';
+import BudgetProposalForm from './pages/BudgetProposalForm';
+import ConsolidatedBudgetReport from './pages/ConsolidatedBudgetReport';
+import BudgetUtilizationDashboard from './pages/BudgetUtilizationDashboard';
+import BudgetProposalReport from './pages/BudgetProposalReport';
 import './App.css';
 
 // Dashboard Wrapper Component
@@ -90,6 +94,13 @@ function App() {
                 <Route path="allocations/add" element={<AllocationForm />} />
                 <Route path="allocations/edit/:id" element={<AllocationForm />} />
                 <Route path="bulk-upload" element={<BulkUpload />} />
+                <Route path="budget-proposals" element={<BudgetProposals />} />
+                <Route path="budget-proposals/add" element={<BudgetProposalForm />} />
+                <Route path="budget-proposals/edit/:id" element={<BudgetProposalForm />} />
+                <Route path="budget-proposals/:id" element={<BudgetProposalForm />} />
+                <Route path="consolidated-budget-report" element={<ConsolidatedBudgetReport />} />
+                <Route path="budget-utilization-dashboard" element={<BudgetUtilizationDashboard />} />
+                <Route path="budget-proposal-report" element={<BudgetProposalReport />} />
                 <Route path="approvals" element={<ApprovalsQueue />} />
                 <Route path="reports" element={<Reports />} />
 

@@ -161,3 +161,158 @@
         padding: 1.5rem;
     }
 }
+
+.label-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+}
+
+.btn-link:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.btn-link:disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Proposal Picker Modal */
+.proposal-picker-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.proposal-picker-content {
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+.proposal-picker-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.proposal-picker-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.proposal-picker-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.proposal-items-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.proposal-item-card {
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.proposal-item-card:hover {
+    border-color: var(--primary);
+    background: #f0f7ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.item-head {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.item-amount {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.item-details p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+    color: #475569;
+}
+
+.item-meta {
+    font-size: 0.75rem !important;
+    color: #94a3b8 !important;
+    font-style: italic;
+}
+
+.no-items {
+    text-align: center;
+    color: #64748b;
+    padding: 2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
